@@ -1,5 +1,7 @@
 import argparse
 import logging
+import time
+from datetime import datetime
 
 import mne
 import numpy as np
@@ -10,6 +12,8 @@ from pyqtgraph.Qt import QtGui, QtCore
 
 from brainflow.board_shim import BoardShim, BrainFlowInputParams, BoardIds
 from brainflow.data_filter import DataFilter, FilterTypes, DetrendOperations
+
+plt.set_loglevel("info")
 
 
 class OctopusBCI:
@@ -36,11 +40,6 @@ class OctopusBCI:
 
         QtGui.QApplication.instance().exec_()
 
-        # timer = QtCore.QTimer()
-        # timer.timeout.connect(self.update_classifier)
-        # timer.start(self.window_size)
-        # QtGui.QApplication.instance().exec_()
-
     def _init_timeseries(self):
         self.plots = list()
         self.curves = list()
@@ -64,12 +63,9 @@ class OctopusBCI:
             DataFilter.detrend(data[channel], DetrendOperations.CONSTANT.value)
             DataFilter.perform_bandpass(data[channel], self.sampling_rate, 51.0, 100.0, 2,
                                         FilterTypes.BUTTERWORTH.value, 0)
-            DataFilter.perform_bandpass(data[channel], self.sampling_rate, 51.0, 100.0, 2,
-                                        FilterTypes.BUTTERWORTH.value, 0)
             DataFilter.perform_bandstop(data[channel], self.sampling_rate, 50.0, 4.0, 2,
                                         FilterTypes.BUTTERWORTH.value, 0)
-            DataFilter.perform_bandstop(data[channel], self.sampling_rate, 60.0, 4.0, 2,
-                                        FilterTypes.BUTTERWORTH.value, 0)
+
             self.curves[count].setData(data[channel].tolist())
 
         self.app.processEvents()
@@ -96,12 +92,17 @@ class OctopusBCI:
         sfreq = self.board_shim.get_sampling_rate(self.board_id)
         info = mne.create_info(ch_names=ch_names, sfreq=sfreq, ch_types=ch_types)
         raw = mne.io.RawArray(eeg_data, info)
-        freqs = (25.0, 50.0)
+        freqs = (50.0)
         raw_notch = raw.notch_filter(freqs=freqs)
         raw_bp = raw_notch.filter(l_freq=0.1, h_freq=30.0)
 
         # its time to plot something!
         raw_bp.plot_psd(average=True, fmax=50.0)
+
+    def save_data_session(self):
+        data = self.board_shim.get_board_data(self.num_points)
+        timestamp = datetime.now()
+        DataFilter.write_file(data, '../data/test_' + timestamp.strftime("%d-%m-%Y-%H:%M") + '.csv', 'w')  # use 'a' for append mode
 
     def calculate_relaxation(self, feature_vector):
         relaxation_params = BrainFlowModelParams(BrainFlowMetrics.RELAXATION.value,
@@ -170,6 +171,7 @@ def main():
     finally:
         logging.info('End')
         octo.plot_psd()
+        octo.save_data_session()
         if board_shim.is_prepared():
             logging.info('Releasing session')
             board_shim.release_session()
