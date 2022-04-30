@@ -49,7 +49,7 @@ def main():
     board.prepare_session()
     board.start_stream(45000, args.streamer_params)
     BoardShim.log_message(LogLevels.LEVEL_INFO.value, 'start sleeping in the main thread')
-    time.sleep(5)  # recommended window size for eeg metric calculation is at least 4 seconds, bigger is better
+    time.sleep(10)  # recommended window size for eeg metric calculation is at least 4 seconds, bigger is better
     data = board.get_board_data()
     board.stop_stream()
     board.release_session()

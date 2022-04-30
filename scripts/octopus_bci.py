@@ -1,14 +1,16 @@
 import argparse
 import logging
 
+import mne
 import pyqtgraph as pg
+from matplotlib import pyplot as plt
 from pyqtgraph.Qt import QtGui, QtCore
 
 from brainflow.board_shim import BoardShim, BrainFlowInputParams, BoardIds
 from brainflow.data_filter import DataFilter, FilterTypes, DetrendOperations
 
 
-class Graph:
+class OctopusBCI:
     def __init__(self, board_shim):
         self.board_id = board_shim.get_board_id()
         self.board_shim = board_shim
@@ -45,6 +47,7 @@ class Graph:
 
     def update(self):
         data = self.board_shim.get_current_board_data(self.num_points)
+
         for count, channel in enumerate(self.exg_channels):
             # plot timeseries
             DataFilter.detrend(data[channel], DetrendOperations.CONSTANT.value)
@@ -59,6 +62,26 @@ class Graph:
             self.curves[count].setData(data[channel].tolist())
 
         self.app.processEvents()
+
+    def plot_psd(self):
+        data = self.board_shim.get_current_board_data(self.num_points)
+        eeg_channels = self.board_shim.get_eeg_channels(self.board_id)
+
+        eeg_data = data[eeg_channels, :]
+        eeg_data = eeg_data / 1000000  # BrainFlow returns uV, convert to V for MNE
+
+        # Creating MNE objects from brainflow data arrays
+        ch_types = ['eeg'] * len(eeg_channels)
+        ch_names = self.board_shim.get_eeg_names(self.board_id)
+        sfreq = self.board_shim.get_sampling_rate(self.board_id)
+        info = mne.create_info(ch_names=ch_names, sfreq=sfreq, ch_types=ch_types)
+        raw = mne.io.RawArray(eeg_data, info)
+        freqs = (50.0)
+        raw_notch = raw.notch_filter(freqs=freqs)
+        raw_bp = raw_notch.filter(l_freq=0.1, h_freq=30.0)
+
+        # its time to plot something!
+        raw_bp.plot_psd(average=True, fmax=50.0)
 
 
 def main():
@@ -98,11 +121,13 @@ def main():
         board_shim = BoardShim(args.board_id, params)
         board_shim.prepare_session()
         board_shim.start_stream(450000, args.streamer_params)
-        Graph(board_shim)
+
+        graph = OctopusBCI(board_shim)
     except BaseException:
         logging.warning('Exception', exc_info=True)
     finally:
         logging.info('End')
+        graph.plot_psd()
         if board_shim.is_prepared():
             logging.info('Releasing session')
             board_shim.release_session()
