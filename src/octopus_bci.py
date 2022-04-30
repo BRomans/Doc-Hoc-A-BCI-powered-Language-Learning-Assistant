@@ -101,8 +101,9 @@ class OctopusBCI:
 
     def save_data_session(self):
         data = self.board_shim.get_board_data(self.num_points)
-        timestamp = datetime.now()
-        DataFilter.write_file(data, '../data/test_' + timestamp.strftime("%d-%m-%Y-%H:%M") + '.csv', 'w')  # use 'a' for append mode
+        timestamp = time.strftime('%Y-%m-%d %H-%M-%S')
+        DataFilter.write_file(data, '../data/test_' + timestamp + '.csv',
+                              'w')  # use 'a' for append mode
 
     def calculate_relaxation(self, feature_vector):
         relaxation_params = BrainFlowModelParams(BrainFlowMetrics.RELAXATION.value,
