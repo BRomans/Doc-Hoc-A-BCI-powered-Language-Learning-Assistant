@@ -27,38 +27,38 @@ from [OpenBCI](https://openbci.com/) and built on top of the [Brainflow](https:/
 ## Concept Design
 The design of the application was realized using Figma and Illustrator.
 
-![Logo screen](doc/frames/Frame 0.png?raw=true)
+![Logo screen](doc/frames/Frame 0.png)
 
 At the beginning the user is prompted to choose a language to learn, the
 level they want to reach, the type of session to start with and the length
 of the session
 
 
-![Selection screen](doc/frames/Frame 1.png?raw=true)
+![Selection screen](doc/frames/Frame 1.png)
 
 
 During the session the progress is shown with a loading bar that highlights
 the fact that their brain activity is being processed in real-time.
 
-![Session screen](doc/frames/Frame 2.png?raw=true)
+![Session screen](doc/frames/Frame 2.png)
 
 
 At the end of the session the engine computes the Relaxation and Focus scores,
 that are then prompted to the user.
 
-![Sessioj screen](doc/frames/Frame 3.png?raw=true)
+![Session screen](doc/frames/Frame 3.png?raw=true)
 
 
 The user can also look up more specific insights about the session to learn about 
 their focus during each minute of the learning session. 
 
-![End of session screen](doc/frames/Frame 4.png?raw=true)
+![Session Analytics](doc/frames/Frame 4.png)
 
 
 Finally, the user gets recommended some more learning sessions adapted to their previous 
 performances and preferences.
 
-![alt text](doc/frames/Frame 5.png?raw=true "End of session screen")
+![End of session screen](doc/frames/Frame 5.png)
 
 
 
